@@ -2,8 +2,9 @@ import { authModalState } from "@/atoms/authModalAtom";
 import { Button, Flex, Input, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { useSetRecoilState } from "recoil";
-import { useSignInWithGoogle } from "react-firebase-hooks/auth";
+import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase/clientApp";
+import { FIREBASE_ERRORS } from "@/firebase/errors";
 
 type Props = {};
 
@@ -15,13 +16,15 @@ const LogIn = (props: Props) => {
     });
 
     //Firebase Logic
-    const [signInWithGoogle, user, loading, error] = useSignInWithGoogle(auth);
+    const [signInWithEmailAndPassword, user, loading, error] =
+        useSignInWithEmailAndPassword(auth);
 
-    const onSubmitHandler = (event) => {
+    const onSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        signInWithEmailAndPassword(loginForm.email, loginForm.password);
     };
 
-    const onChangeHandler = (event: { target: { name: any; value: any } }) => {
+    const onChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
         setLoginForm((prev) => ({
             ...prev,
             [event.target.name]: event.target.value,
@@ -32,6 +35,13 @@ const LogIn = (props: Props) => {
         setAuthModalState((prevState) => ({
             ...prevState,
             view: "signup",
+        }));
+    };
+
+    const switchToResetPassword = () => {
+        setAuthModalState((prev) => ({
+            ...prev,
+            view: "resetPassword",
         }));
     };
 
@@ -81,9 +91,30 @@ const LogIn = (props: Props) => {
                     borderColor: "blue.500",
                 }}
             />
+
+            <Text fontSize="12px" textAlign="center" color="red" mb={4}>
+                {
+                    FIREBASE_ERRORS[
+                        error?.message as keyof typeof FIREBASE_ERRORS
+                    ]
+                }
+            </Text>
+
             <Button type="submit" width="100%" height="36px" mb={4}>
                 Log in
             </Button>
+
+            <Flex justify="center" mb={2} fontSize="13px" columnGap={1}>
+                <Text>Forgot your password?</Text>
+                <Text
+                    color="blue.500"
+                    fontWeight={700}
+                    cursor="pointer"
+                    onClick={switchToResetPassword}
+                >
+                    Reset Password
+                </Text>
+            </Flex>
 
             <Flex justify="center" mb={4} fontSize="13px" columnGap={1}>
                 <Text>New to reddit?</Text>
@@ -93,7 +124,7 @@ const LogIn = (props: Props) => {
                     cursor="pointer"
                     onClick={switchToSignup}
                 >
-                    SIGN UP
+                    Sign up
                 </Text>
             </Flex>
         </form>

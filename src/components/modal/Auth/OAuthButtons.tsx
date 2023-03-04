@@ -1,17 +1,26 @@
+import { auth } from "@/firebase/clientApp";
 import { Button, Flex, Image, Text } from "@chakra-ui/react";
-import React from "react";
+import { useSignInWithGoogle } from "react-firebase-hooks/auth";
+import { FIREBASE_ERRORS } from "@/firebase/errors";
 
 type Props = {};
 
 const OAuthButtons = (props: Props) => {
+    const [signInWithGoogle, user, loading, error] = useSignInWithGoogle(auth);
+    const googleSigninHandler = () => {
+        signInWithGoogle();
+    };
+    const appleSigninHandler = (event: React.FormEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
     return (
         <Flex direction="column" width="100%" mb={4} rowGap={3}>
-            <Button variant="oauth">
+            <Button variant="oauth" onClick={googleSigninHandler}>
                 <Image src="/images/googlelogo.png" height="18px" mr={2} />
                 Continue with Google
             </Button>
 
-            <Button variant="oauth">
+            <Button variant="oauth" onClick={appleSigninHandler}>
                 <Image
                     src="/images/applelogo.png"
                     height="28px"
@@ -20,6 +29,18 @@ const OAuthButtons = (props: Props) => {
                 />
                 Continue with Apple
             </Button>
+
+            {error && (
+                <Text fontSize="12px" textAlign="center" color="red" mb={4}>
+                    {FIREBASE_ERRORS[
+                        error.message as keyof typeof FIREBASE_ERRORS
+                    ]
+                        ? FIREBASE_ERRORS[
+                              error.message as keyof typeof FIREBASE_ERRORS
+                          ]
+                        : error.message}
+                </Text>
+            )}
         </Flex>
     );
 };

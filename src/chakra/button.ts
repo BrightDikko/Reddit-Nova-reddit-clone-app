@@ -31,6 +31,18 @@ export const Button: ComponentStyleConfig = {
             border: "1px solid",
             borderColor: "blue.500",
         },
+        communityOutline: {
+            color: "red.500",
+            border: "1px solid",
+            borderColor: "red.500",
+        },
+        communitySolid: {
+            color: "white",
+            bg: "red.500",
+            _hover: {
+                bg: "red.400",
+            },
+        },
         oauth: {
             height: "34px",
             border: "1px solid",

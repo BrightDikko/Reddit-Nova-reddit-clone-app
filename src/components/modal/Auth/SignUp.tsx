@@ -141,7 +141,7 @@ const SignUp = (props: Props) => {
                     cursor="pointer"
                     onClick={switchToLogin}
                 >
-                    SIGN UP
+                    Log in
                 </Text>
             </Flex>
         </form>
