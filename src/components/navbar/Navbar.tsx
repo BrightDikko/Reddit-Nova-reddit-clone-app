@@ -12,9 +12,14 @@ const Navbar = (props: Props) => {
     return (
         <Flex bg="white" height="50px" padding="6px 12px">
             <Flex align="center">
-                <Image src="/images/redditFace.svg" height="30px" />
+                <Image
+                    src="/images/redditFace.svg"
+                    alt="reddit image"
+                    height="30px"
+                />
                 <Image
                     src="/images/redditText.svg"
+                    alt="reddit image"
                     height="46px"
                     mb={0.5}
                     display={{ base: "none", md: "unset" }}

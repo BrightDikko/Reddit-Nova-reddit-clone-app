@@ -19,6 +19,15 @@ import {
 import React, { useState } from "react";
 import { BsFillEyeFill, BsPersonFill } from "react-icons/bs";
 import { HiLockClosed } from "react-icons/hi";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, firestore } from "@/firebase/clientApp";
+import {
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp,
+    runTransaction,
+} from "firebase/firestore";
 
 type Props = {
     modalIsOpen: boolean;
@@ -26,9 +35,12 @@ type Props = {
 };
 
 const CreateCommunityModal: React.FC<Props> = ({ modalIsOpen, closeModal }) => {
+    const [user] = useAuthState(auth);
     const [selectedCommunityType, setSelectedCommunityType] = useState("");
     const [name, setName] = useState("");
     const [charsRemaining, setCharsRemaining] = useState(21);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const communityTypeHandler = (
         event: React.ChangeEvent<HTMLInputElement>
@@ -47,8 +59,59 @@ const CreateCommunityModal: React.FC<Props> = ({ modalIsOpen, closeModal }) => {
     };
 
     const handleCreateCommunity = async () => {
-        // Validate the community
-        // Create the community document in firestore
+        if (error) {
+            setError("");
+        }
+        // Validate the community name the user entered
+        const format = /[ `!@#$%^&*()+\-=\[\]{};':"\\|,.<>\/?~]/;
+        if (format.test(name) || name.length < 3) {
+            setError(
+                "Community names must be between 3-21 characters, and can only contain letters, numbers, or underscores"
+            );
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            // Create the community document in firestore
+            const communityDocRef = doc(firestore, "communities", name);
+
+            await runTransaction(firestore, async (transaction) => {
+                // Check if the community name is already taken in database
+                const communityDoc = await transaction.get(communityDocRef);
+
+                if (communityDoc.exists()) {
+                    throw new Error(`Sorry, r/${name} is taken. Try another.`);
+                    return;
+                }
+                // Create new community if name is valid and not taken
+                transaction.set(communityDocRef, {
+                    creatorId: user?.uid,
+                    createdAt: serverTimestamp(),
+                    numberOfMembers: 1,
+                    privacyType: selectedCommunityType,
+                });
+
+                // Create communitySnippet on user
+                transaction.set(
+                    doc(
+                        firestore,
+                        `users/${user?.uid}/communitySnippets`,
+                        name
+                    ),
+                    {
+                        communityId: name,
+                        isModerator: true,
+                    }
+                );
+            });
+        } catch (error: any) {
+            console.log("handleCreateCommunity error: ", error);
+            setError(error.message);
+        }
+
+        setLoading(false);
     };
 
     return (
@@ -104,6 +167,10 @@ const CreateCommunityModal: React.FC<Props> = ({ modalIsOpen, closeModal }) => {
                                 pt={2}
                             >
                                 {charsRemaining} Characters remaining
+                            </Text>
+
+                            <Text fontSize="10pt" pt={1} color="red.300">
+                                {error}
                             </Text>
                         </Box>
 
@@ -221,7 +288,11 @@ const CreateCommunityModal: React.FC<Props> = ({ modalIsOpen, closeModal }) => {
                         >
                             Cancel
                         </Button>
-                        <Button variant="communitySolid">
+                        <Button
+                            variant="communitySolid"
+                            onClick={handleCreateCommunity}
+                            isLoading={loading}
+                        >
                             Create Community
                         </Button>
                     </ModalFooter>

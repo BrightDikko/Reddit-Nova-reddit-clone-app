@@ -1,4 +1,3 @@
-// 1. Import the extendTheme function
 import "@fontsource/open-sans/300.css";
 import "@fontsource/open-sans/400.css";
 import "@fontsource/open-sans/700.css";
@@ -12,7 +11,8 @@ export const theme = extendTheme({
         },
     },
     fonts: {
-        body: "Open Sans, sans-serif",
+        heading: "Open Sans, sans-serif",
+        body: "Raleway, sans-serif",
     },
     styles: {
         global: {

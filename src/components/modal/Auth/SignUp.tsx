@@ -1,10 +1,15 @@
 import { authModalState } from "@/atoms/authModalAtom";
 import { Button, Flex, Input, Text } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSetRecoilState } from "recoil";
-import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase/clientApp";
+import {
+    useAuthState,
+    useCreateUserWithEmailAndPassword,
+} from "react-firebase-hooks/auth";
+import { auth, firestore } from "@/firebase/clientApp";
 import { FIREBASE_ERRORS } from "@/firebase/errors";
+import { User } from "firebase/auth";
+import { addDoc, collection, doc, setDoc } from "firebase/firestore";
 
 type Props = {};
 
@@ -18,7 +23,7 @@ const SignUp = (props: Props) => {
 
     //Firebase Logic
     const [error, setError] = useState("");
-    const [createUserWithEmailAndPassword, user, loading, userError] =
+    const [createUserWithEmailAndPassword, userCred, loading, userError] =
         useCreateUserWithEmailAndPassword(auth);
 
     const onSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
@@ -46,6 +51,19 @@ const SignUp = (props: Props) => {
             view: "login",
         }));
     };
+
+    const createUserDocument = async (user: User) => {
+        await setDoc(
+            doc(firestore, "users", user.uid),
+            JSON.parse(JSON.stringify(user))
+        );
+    };
+
+    useEffect(() => {
+        if (userCred) {
+            createUserDocument(userCred.user);
+        }
+    }, [userCred]);
 
     return (
         <form onSubmit={onSubmitHandler}>
